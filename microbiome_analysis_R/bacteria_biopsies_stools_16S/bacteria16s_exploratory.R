@@ -1,5 +1,5 @@
 ##################################################################################################################
-#The aim of this code is to create a stacked bar plot with the 15 more represented genus of bacterias in our data#
+#The aim of this code is to create a stacked bar plot with the 15 more represented genus of bacteria in our data#
 #############Also, at the end of this file both ANOSIM and PERMANOVA tests will be performed######################
 ##################################################################################################################
 #First of all, the required libraries will be loaded: to read data, to process it and to plot it
@@ -128,7 +128,7 @@ our_color_scale<-c("#000000","#FFCC00","#0099FF","#FF00CC","#99CC00","#FF3300",
 biopplot<-ggplot(biop_represent,aes(fill=Genus,y=mean_value,x=IBD_type))+
   geom_bar(position = "fill",stat="identity",color="black")+
   scale_fill_manual(values=our_color_scale)+
-  ggtitle("Top 15 Genus of Bacterias in Biopsies")+
+  ggtitle("Top 15 Genus of Bacteria in Biopsies")+
   theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"))
 x11()
 biopplot
@@ -197,7 +197,7 @@ stools_represent<-union(stools_represent,stools_quicrohn_top)
 stoolsplot<-ggplot(stools_represent,aes(fill=Genus,y=mean_value,x=IBD_type))+
   geom_bar(position = "fill",stat="identity",color="black")+
   scale_fill_manual(values=our_color_scale) + 
-  ggtitle("Top 15 Genus of Bacterias in Stools") +
+  ggtitle("Top 15 Genus of Bacteria in Stools") +
   theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"))
 x11()
 stoolsplot
