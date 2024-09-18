@@ -103,11 +103,15 @@ color_choice<-c("#000000","#FFCC00","#0099FF","#FF00CC","#99CC00","#FF3300",
              "#FFFFCC","#996699","#CC0000","#66FFFF","#FF9933","#003366",
              "#F2F2F2","#663300","#0066CC","#FF6699","#E5C494","#6A3D9A",
              "#B3E2CD","#FC8D62","#A6CEE3","#4DAF4A","#8DA0CB","#F781BF")
+#The next library will be loaded to order the IBD_type factor with an specific order
+library(forcats)
 x11()
-ggplot(fungi_represent,aes(fill=Genus,y=mean_value,x=IBD_type))+
+fungi_represent%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(fungi_represent,aes(fill=Genus,y=mean_value,x=name))+
   geom_bar(position = "fill",stat="identity",color="black")+
   scale_fill_manual(values=color_choice)+ggtitle("Top 15 Genus of Fungi in Biopsies")+
-  theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"),axis.title.x=element_blank())
 
 
 #####################################################################

@@ -120,16 +120,20 @@ our_color_scale<-c("#000000","#FFCC00","#0099FF","#FF00CC","#99CC00","#FF3300",
              "#FFFFCC","#996699","#CC0000","#66FFFF","#FF9933","#003366",
              "#F2F2F2","#663300","#0066CC","#FF6699","#E5C494","#6A3D9A",
              "#B3E2CD","#FC8D62","#A6CEE3","#4DAF4A","#8DA0CB","#F781BF")
+#The next library is loaded to order the IBD_type factor into an specific order that will be given
+library(forcats)
 #From left to right, all the parameters that are given: the dataset containing 3 columns (genus, mean_value and IBD_type), 
 #aes is a function containing fill=Genus so that it is filled with a different color according to the Genus, with y=mean_value it is being said that the y-axis represents the relative frequency calculated and with x=IBD_type that it has the a different column for each IBD_type
 #With geom_bar it is made a stacked barplot from the data given before, with position=fill it makes it stacked and with stat=identity it makes it into 0-1, with color=black the lines between the stacks are black
 #With ggtitle the title is set
 #With theme some parametres of the text of the title are being modified. hjust=0.5 centers the text, size=20 gives the title a size of 20 and face=bold makes the text bold 
-biopplot<-ggplot(biop_represent,aes(fill=Genus,y=mean_value,x=IBD_type))+
+biopplot<-biop_represent%>%%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(biop_represent,aes(fill=Genus,y=mean_value,x=name))+
   geom_bar(position = "fill",stat="identity",color="black")+
   scale_fill_manual(values=our_color_scale)+
   ggtitle("Top 15 Genus of Bacteria in Biopsies")+
-  theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"),axis.title.x = element_blank())
 x11()
 biopplot
 
@@ -194,11 +198,13 @@ stools_represent<-union(stools_represent,stools_quiuc_top)
 stools_represent<-union(stools_represent,stools_accrohn_top)
 stools_represent<-union(stools_represent,stools_quicrohn_top)
 #Exactly the same as before
-stoolsplot<-ggplot(stools_represent,aes(fill=Genus,y=mean_value,x=IBD_type))+
+stoolsplot<-stools_represent%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(stools_represent,aes(fill=Genus,y=mean_value,x=name))+
   geom_bar(position = "fill",stat="identity",color="black")+
   scale_fill_manual(values=our_color_scale) + 
   ggtitle("Top 15 Genus of Bacteria in Stools") +
-  theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"))
+  theme(plot.title = element_text(hjust = 0.5,size=20,face = "bold"),axis.title.x=element_blank())
 x11()
 stoolsplot
 
