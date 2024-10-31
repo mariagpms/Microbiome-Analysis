@@ -7,7 +7,7 @@ The code of this project was developed by María García Pizarro in colaboration
 We would also like to acknowledge the valuable insights provided by [Francisco Illanes Álvarez](https://orcid.org/0000-0002-0837-8265). 
 
 ## What will you find in this repository
-There are two folders, one for fungi and another for bacteria. Moreover, there is a .md file containing the relevant commands to use qiime2 to obtain the files that are needed for the further R analysis. <br />Type of patients: control, active uc, quiescent uc, active crohn, quiescent crohn.
+There are two folders, one for fungi and another for bacteria. Moreover, there is a .md file containing the relevant commands to use qiime2 to obtain the files that are needed for the further R analysis. In addition, there is a file 'correlation.R' that contains the script used to plot the heatmaps of the correlation between fungi and the most represented bacteri. <br />Type of patients: control, active uc, quiescent uc, active crohn, quiescent crohn.
 ### Fungi
 The data corresponds to fungi found on biopsies of the different types of patients mentioned above.
 The folder named as plots, has different plots that come as the result of running the R codes.<br />
