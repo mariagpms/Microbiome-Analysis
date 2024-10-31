@@ -58,6 +58,7 @@ sample_names(physeq)
 meta_data <- read_excel("metadatafungi.xlsx")
 sampledata = sample_data(data.frame(meta_data, row.names=sample_names(physeq), stringsAsFactors=FALSE))
 head(sampledata)
+relation_names_id<-relation_names_id%>%left_join(meta_data,by = join_by("sample_id"=="sample-id"))
 
 #The random tree associated to the physeq object is created, one created with qiime2 or any other tool could have been loaded instead of creating a new one
 library("ape")
@@ -90,17 +91,38 @@ library(ggplot2)
 physeq_prune <- prune_species(speciesSums(physeq1) > 0, physeq1)#prune the physeq object
 
 #Create the plots of alpha diversity
-#1. Using the plot_richness function form the package phyloseq, giving it the pruned object, setting the measures wanted (in help you can see other measures that are available) and selecting which variable to group them by
-pwhisk<-plot_richness(physeq_prune, measures=c("Simpson","Shannon"),x = "IBD_type")
-#2.Add the function geom_boxplot to the plot object, it is set aes(fill=IBD_type) so that the boxplots are filled with a different colour, depending on the type of illness
-#Also, by setting alpha=0.4 how opaque is the shade of the color is being determined, with higher values of alpha it would be less see through
-#With geom_jitter the value of alpha diversity of each patient within the plot will be represented, the width value is just for knowing where to set and size is equal to 2 so that the points can be seen, alpha is the same as before, it is the most opaque it can be so that you can see it over the boxplot
-#With theme some text information is given, deleting the legend as it is written below each what is it, making the title bold, centered and bigger size and setting the text horizontally (the one bellow each boxplot)
+#First, the diversity distances for both Shannon's and Simpson's measures are calculated
+measures<-estimate_richness(physeq_prune,measures = c("Simpson","Shannon"))
+measures$names_samples<-rownames(measures)
+measures<-measures%>%left_join(relation_names_id,by=join_by("names_samples"=="code"))
+
+#The following library is loaded to use fct_relevel() which will reorder the levels of IBD_type factor
+library(forcats)
+#The following library is loaded to modify the theme and title of the plots when they are set together
+library(patchwork)
+
+#Then, the plots will be ploted and then joined to have them side by side
+Simpson<-measures%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(aes(x=name,y=Simpson,fill=name,alpha=0.3))+
+  geom_boxplot()+geom_jitter(aes(color=name),width = 0.2,size=2,alpha=1)+
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.title.x = element_blank())
+Simpson
+
+Shannon<-measures%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(aes(x=name,y=Shannon,fill=name,alpha=0.3))+
+  geom_boxplot()+geom_jitter(aes(color=name),width = 0.2,size=2,alpha=1)+
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.title.x = element_blank())
+Shannon
+
 x11()
-pwhisk+geom_boxplot(aes(fill=IBD_type),alpha=0.4)+
-  geom_jitter(aes(color = IBD_type), width = 0.2, size = 2, alpha = 1)+
-  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.text.x = element_text(angle = 0, hjust = 0.5))+
-  ggtitle("Alpha diversity in Fungi Biopsies")
+Simpson+Shannon+plot_annotation(title = "Alpha diversity in Fungi Biopsies")&theme(plot.title = element_text(hjust = 0.5,size=20,face="bold"))
+
+#Now, the Kruskal-Wallis test will be performed
+measures<-measures%>%mutate(IBD_type = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))
+kruskal.test(Simpson ~ IBD_type, data = measures)
+kruskal.test(Shannon ~ IBD_type, data = measures)
 
 #Now, lefse is going to be used to represent some plots that will help to determine which species are augmented or decreased between groups of IBD_type
 #Install microbiomeMaker and load it

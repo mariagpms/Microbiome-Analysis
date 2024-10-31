@@ -111,27 +111,63 @@ physeq1_st<-subset_samples(physeq1,Sample_type=="Stools")
 #See help("Deprecated") and help("phyloseq-deprecated").
 biop_prune<-prune_species(speciesSums(physeq1_biop) > 0, physeq1_biop)
 st_prune<-prune_species(speciesSums(physeq1_st)>0,physeq1_st)
-#Create the plots of alpha diversity
-#1. Using the plot_richness function from the package phyloseq giving it the pruned object, setting the measures wanted (in help you can see other measures that are available) and selecting which variable to group them by
-pwhisk_biop<-plot_richness(biop_prune, measures=c("Simpson","Shannon"),x = "IBD_type")
-#2.Add the function geom_boxplot to the plot object, it is set aes(fill=IBD_type) so that the boxplots are filled with a different colour, depending on the type of illness
-#Also, by setting alpha=0.4 how opaque is the shade of the color is being determined, with higher values of alpha it would be less seethrough
-#With geom_jitter the value of alpha diversity of each patient within the plot will be represented, the width value is just for knowing where to set them and size is equal to 2 so that the points can be seen, alpha is the same as before, it is the most opaque it can be so that you can see it over the boxplot
-#With theme some text information is given, deleting the legend as it is written below each what is it, making the title bold, centered and bigger size and setting the text horizontally (the one bellow each boxplot)
-x11()
-pwhisk_biop+geom_boxplot(aes(fill=IBD_type),alpha=0.4)+
-  geom_jitter(aes(color = IBD_type), width = 0.2, size = 2, alpha = 1)+
-  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.text.x = element_text(angle = 0, hjust = 0.5))+
-  ggtitle("Alpha diversity in Biopsies")
 
-#For stools is the same
-pwhisk_st<-plot_richness(st_prune,measures=c("Simpson","Shannon"),x = "IBD_type")
-x11()
-pwhisk_st+geom_boxplot(aes(fill=IBD_type),alpha=0.4)+
-  geom_jitter(aes(color = IBD_type), width = 0.2, size = 2, alpha = 1)+
-  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.text.x = element_text(angle = 0, hjust = 0.5))+
-  ggtitle("Alpha diversity in Stool")
+#The alpha diversity plots for biopsies will be created
+#First, calculate the diversity distances for both Simpson's and Shannon's measures
+measures_biop<-estimate_richness(biop_prune,measures = c("Simpson","Shannon"))
+measures_biop$names_samples<-rownames(measures_biop)
+measures_biop<-measures_biop%>%left_join(relation_names_id,by=join_by("names_samples"=="code"))
+#The following library is loaded to use fct_relevel() which will reorder the levels of IBD_type factor
+library(forcats)
+#Then, the boxplots of alpha diversity for Simpson's and Shannon's measure are created
+biop_Simpson<-measures_biop%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(aes(x=name,y=Simpson,fill=name,alpha=0.3))+
+  geom_boxplot()+geom_jitter(aes(color=name),width = 0.2,size=2,alpha=1)+
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.title.x = element_blank())
+biop_Simpson
 
+biop_Shannon<-measures_biop%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(aes(x=name,y=Shannon,fill=name,alpha=0.3))+
+  geom_boxplot()+geom_jitter(aes(color=name),width = 0.2,size=2,alpha=1)+
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.title.x = element_blank())
+biop_Shannon
+#The following library is loaded to modify the theme and title of the plots when they are set together
+library(patchwork)
+x11()
+biop_Simpson+biop_Shannon+plot_annotation(title = "Alpha diversity in Biopsies")&theme(plot.title = element_text(hjust = 0.5,size=20,face="bold"))
+
+#Now, it will be done for stools
+measures_st<-estimate_richness(st_prune,measures = c("Simpson","Shannon"))
+measures_st$names_samples<-rownames(measures_st)
+measures_st<-measures_st%>%left_join(relation_names_id,by=join_by("names_samples"=="code"))
+
+st_Simpson<-measures_st%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(aes(x=name,y=Simpson,fill=name,alpha=0.3))+
+  geom_boxplot()+geom_jitter(aes(color=name),width = 0.2,size=2,alpha=1)+
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.title.x = element_blank())
+st_Simpson
+
+st_Shannon<-measures_st%>%
+  mutate(name = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))%>%
+  ggplot(aes(x=name,y=Shannon,fill=name,alpha=0.3))+
+  geom_boxplot()+geom_jitter(aes(color=name),width = 0.2,size=2,alpha=1)+
+  theme(legend.position = "none",plot.title = element_text(hjust = 0.5,size=20,face="bold"),axis.title.x = element_blank())
+st_Shannon
+
+x11()
+st_Simpson+st_Shannon+plot_annotation(title = "Alpha diversity in Stool")&theme(plot.title = element_text(hjust = 0.5,size=20,face="bold"))
+
+#Now, the Kruskal-Wallis test for both biopsies and stools will be performed
+measures_biop<-measures_biop%>%mutate(IBD_type = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))
+kruskal.test(Simpson ~ IBD_type, data = measures_biop)
+kruskal.test(Shannon ~ IBD_type, data = measures_biop)
+
+measures_st<-measures_st%>%mutate(IBD_type = fct_relevel(IBD_type,"CONTROL","ACTIVE CROHN","QUIESCENT CROHN","ACTIVE UC","QUIESCENT UC"))
+kruskal.test(Simpson ~ IBD_type, data = measures_st)
+kruskal.test(Shannon ~ IBD_type, data = measures_st)
 
 #Now, lefse is going to be used to represent some plots that will help to determine which species are augmented or decreased between biopsies and stools
 #Install microbiomeMaker and load it
